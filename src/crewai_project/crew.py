@@ -117,33 +117,48 @@ TEAM_TASKS = [
 
 
 # ----------------------------------------------------
-# 2. 动态构建 Agents 和 Tasks
+# 2. 动态构建 Agents 和 Tasks，并相互赋能
 # ----------------------------------------------------
 created_agents = []
 created_tasks = []
 
-for item in TEAM_TASKS:
-    # 1. 加载 Agent 人设
+# 第 2.1 步：提前读取所有人的简历，组装出“团队通讯录”
+# 这样所有人都会在背景故事里知道自己是在跟谁合作、对方负责什么。
+team_configs = []
+team_roster_context = "\n\n=================================\n"
+team_roster_context += "【团队协作通讯录】\n"
+team_roster_context += "本次研发任务由以下特工共同协作完成。请了解他们的职责，并在需要时向他们求助或交接工作：\n"
+
+for i, item in enumerate(TEAM_TASKS):
     agent_path = os.path.join(agents_dir, item["agent_file"])
     agent_config = load_agent_from_md(agent_path)
+    team_configs.append(agent_config)
     
-    # 2. 获取对应的模型
+    # 将此人加入通讯录
+    team_roster_context += f"{i+1}. 角色名：[{agent_config['role']}] - 负责范围：{agent_config['goal']}\n"
+
+team_roster_context += "=================================\n"
+
+
+# 第 2.2 步：正式构建团队
+for config, item in zip(team_configs, TEAM_TASKS):
     llm_instance = LLM_MAP.get(item["model"])
     if not llm_instance:
         raise ValueError(f"未知的模型: {item['model']}。只能使用: {list(LLM_MAP.keys())}")
         
-    # 3. 创建 Agent
+    # 动态将团队通讯录注入到该特工的私人背景故事中
+    enhanced_backstory = config['backstory'] + team_roster_context
+
     agent = Agent(
-        role=agent_config['role'],
-        goal=agent_config['goal'],
-        backstory=agent_config['backstory'],
+        role=config['role'],
+        goal=config['goal'],
+        backstory=enhanced_backstory,
         llm=llm_instance,
         verbose=True,
-        allow_delegation=False
+        allow_delegation=True  # 允许他们互相打探情报或委派子任务
     )
     created_agents.append(agent)
     
-    # 4. 创建 Task
     task = Task(
         description=item["task_description"],
         expected_output=item["expected_output"],
