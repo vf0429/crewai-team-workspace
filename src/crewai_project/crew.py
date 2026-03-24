@@ -6,13 +6,37 @@ from crewai import Agent, Task, Crew, Process, LLM
 load_dotenv(override=True)
 
 def load_agent_from_md(filepath: str) -> dict:
-    """读取 Markdown 内的 Role, Goal, Backstory"""
+    """读取 Markdown 内的 Agent 配置，支持旧版 Headers 格式和新版 YAML Frontmatter 格式"""
     if not os.path.exists(filepath):
         raise FileNotFoundError(f"找不到 Agent 配置文件: {filepath}")
         
     with open(filepath, 'r', encoding='utf-8') as f:
         content = f.read()
     
+    # 1. 尝试解析 YAML Frontmatter (agency-agents 格式)
+    if content.startswith('---'):
+        parts = content.split('---', 2)
+        if len(parts) >= 3:
+            frontmatter = parts[1]
+            body = parts[2].strip()
+            
+            role = ""
+            goal = ""
+            for line in frontmatter.split('\n'):
+                line = line.strip()
+                if line.startswith('name:'):
+                    role = line.split('name:', 1)[1].strip().strip('"\'')
+                elif line.startswith('description:'):
+                    goal = line.split('description:', 1)[1].strip().strip('"\'')
+            
+            if role and goal:
+                return {
+                    'role': role,
+                    'goal': goal,
+                    'backstory': body
+                }
+    
+    # 2. 回退到旧版的 Header 解析逻辑
     sections = {}
     current_section = None
     

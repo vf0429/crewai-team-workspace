@@ -9,8 +9,8 @@ description: 启动多智能体协作团队开始联合编程（OpenClaw 专属 
 请严格遵循以下互动步骤，**必须一步步执行，不能跳过用户的确认环节**：
 
 ### Step 1: 扫描资源与拆解任务（不写代码，只口头汇报）
-1. 扫描 `src/crewai_project/config/agents/` 目录，查看目前我们有哪些候选 Agent（员工）。
-2. 根据用户给的需求，决定这个项目需要哪几个 Agent 参与。
+1. 扫描 `src/crewai_project/config/agents/` 及其子目录，特别是海量特工库 `agency_agents_library/`。按需查看里面数百个现成的 `.md` 特工简历（例如 `engineering/`, `design/` 等不同领域的特工）。
+2. 根据用户给的需求，决定这个项目需要哪几个 Agent 参与，选出最精干的组合。
 3. 帮用户制定出具体的子任务（每个选中 Agent 的 `description` 和 `expected_output`）。
 4. **【交互】**：将你的“任务拆解计划”和“选择的 Agent 列表”发给用户看，并询问用户：“**请问对这个任务流水线拆解满意吗？如果满意，请为这几位员工分配他们各自应使用的 Model（可选：codex / kimi / minimax）。**”
    *(⚠️ 必须在这里停顿，等待用户的批准和模型分配。)*
@@ -24,7 +24,7 @@ description: 启动多智能体协作团队开始联合编程（OpenClaw 专属 
    ```python
    TEAM_TASKS = [
        {
-           "agent_file": "product_manager.md",   # 必须是 agents 目录下存在的 md 文件名
+           "agent_file": "agency_agents_library/engineering/engineering-frontend-developer.md",  # 相对于 config/agents/ 的相对路径
            "model": "codex",                     # 根据用户指定，只能在 "codex", "kimi", "minimax" 中选
            "task_description": "...",            # 你拆解的针对此 agent 的任务要求
            "expected_output": "...",             # 你拆解的输出规范
